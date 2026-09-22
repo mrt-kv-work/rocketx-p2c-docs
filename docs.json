@@ -1,0 +1,46 @@
+{
+  "title": "P2C API",
+  "openapi": "./openapi.yaml",
+  "pages": [
+    {
+      "title": "Overview",
+      "path": "./index.md"
+    },
+    {
+      "title": "Signature",
+      "path": "./guides/signature.md"
+    },
+    {
+      "title": "Order",
+      "path": "./guides/order.md"
+    },
+    {
+      "title": "H2H",
+      "path": "./guides/order-h2h.md"
+    },
+    {
+      "title": "Redirect",
+      "path": "./guides/order-redirect.md"
+    },
+    {
+      "title": "Get Order Status",
+      "path": "./guides/order-status.md"
+    },
+    {
+      "title": "Withdraw",
+      "path": "./guides/withdraw.md"
+    },
+    {
+      "title": "Statuses",
+      "path": "./guides/statuses.md"
+    },
+    {
+      "title": "Errors",
+      "path": "./guides/errors.md"
+    },
+    {
+      "title": "Callback",
+      "path": "./guides/callback.md"
+    }
+  ]
+}

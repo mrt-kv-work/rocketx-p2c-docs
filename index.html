@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2C API | RocketX</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <link rel="stylesheet" href="./assets/styles.css?v=20260922-1">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-main">
+      <a class="brand" href="./" aria-label="P2C API home">
+        <span class="brand-mark">R</span><span class="brand-name">RocketX</span><span class="section-context">P2C</span>
+      </a>
+      <div class="doc-search" role="search">
+        <input id="doc-search-input" type="search" placeholder="Search..." autocomplete="off" aria-label="Search P2C documentation">
+        <div id="doc-search-results" class="doc-search-results" hidden></div>
+      </div>
+      <nav class="header-links" aria-label="Quick links"><a href="./reference.html">API Reference</a></nav>
+    </div>
+  </header>
+  <aside class="page-outline" aria-label="On this page"><div class="outline-title">On this page</div><nav id="page-outline-links"></nav></aside>
+  <div id="app">Loading documentation...</div>
+  <script>
+    window.RocketXSection = {
+      name: "RocketX P2C API", label: "P2C",
+      pages: [
+        { title: "Overview", hash: "#/", file: "index.md" },
+        { title: "Signature", hash: "#/guides/signature", file: "guides/signature.md" },
+        { title: "Order", hash: "#/guides/order", file: "guides/order.md" },
+        { title: "H2H", hash: "#/guides/order-h2h", file: "guides/order-h2h.md", parent: "#/guides/order" },
+        { title: "Redirect", hash: "#/guides/order-redirect", file: "guides/order-redirect.md", parent: "#/guides/order" },
+        { title: "Get Order Status", hash: "#/guides/order-status", file: "guides/order-status.md", parent: "#/guides/order" },
+        { title: "Withdraw", hash: "#/guides/withdraw", file: "guides/withdraw.md" },
+        { title: "Statuses", hash: "#/guides/statuses", file: "guides/statuses.md" },
+        { title: "Errors", hash: "#/guides/errors", file: "guides/errors.md" },
+        { title: "Callback", hash: "#/guides/callback", file: "guides/callback.md" }
+      ]
+    };
+    window.$docsify = {
+      name: "RocketX P2C API", homepage: "index.md", basePath: "./", loadSidebar: "navigation.md", alias: { "/.*/navigation.md": "/navigation.md" },
+      relativePath: true, subMaxLevel: 0, auto2top: true,
+      plugins: [function sectionShell(hook) { hook.doneEach(function () { window.RocketXSectionShell.refresh(); }); }]
+    };
+  </script>
+  <script src="./assets/section-app.js?v=20260922-1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2C API Reference | RocketX</title>
+  <link rel="stylesheet" href="./assets/reference.css?v=20260922-1">
+</head>
+<body>
+  <header class="reference-header">
+    <a href="./"><span class="reference-mark">R</span>RocketX</a>
+    <span class="reference-section">P2C API Reference</span>
+    <a class="reference-back" href="./">Back to guides</a>
+  </header>
+  <div id="app"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.68.0"></script>
+  <script>
+    Scalar.createApiReference("#app", {
+      url: "./openapi.yaml",
+      theme: "default",
+      forceDarkModeState: "light",
+      hideDarkModeToggle: true,
+      hideTestRequestButton: true,
+      hideClientButton: true,
+      agent: { disabled: true },
+      showDeveloperTools: "never",
+      telemetry: false,
+      modelsSectionLabel: "Schemas",
+      expandAllResponses: true,
+      documentDownloadType: "yaml"
+    });
+  </script>
+</body>
+</html>

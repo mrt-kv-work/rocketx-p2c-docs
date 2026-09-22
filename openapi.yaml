@@ -1,0 +1,835 @@
+openapi: 3.0.3
+info:
+  title: RocketX P2C API
+  version: 1.0.0
+  description: Argentina P2C API schema for ARS orders, withdraws and merchant status.
+servers:
+  - url: https://uragan.cash
+    description: RocketX public API server.
+paths:
+  /eapi/orders:
+    post:
+      summary: Create order
+      operationId: createP2COrder
+      security:
+        - PublicKey: []
+          Signature: []
+          Timestamp: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          description: Order created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /eapi/orders/get:
+    post:
+      summary: Get order status
+      operationId: getP2COrder
+      security:
+        - PublicKey: []
+          Signature: []
+          Timestamp: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetOrderRequest'
+      responses:
+        '200':
+          description: Order data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderFullData'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          description: Order not found. Empty response body.
+  /eapi/withdraws:
+    post:
+      summary: Create withdraw
+      operationId: createP2CWithdraw
+      security:
+        - PublicKey: []
+          Signature: []
+          Timestamp: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWithdrawRequest'
+      responses:
+        '200':
+          description: Withdraw created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWithdrawResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /eapi/withdraws/get:
+    post:
+      summary: Get withdraw status
+      operationId: getP2CWithdraw
+      security:
+        - PublicKey: []
+          Signature: []
+          Timestamp: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetWithdrawRequest'
+      responses:
+        '200':
+          description: Withdraw data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WithdrawFullData'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '404':
+          description: Withdraw not found. Empty response body.
+  /eapi/merchants/status:
+    post:
+      summary: Get merchant status
+      operationId: getMerchantStatus
+      security:
+        - PublicKey: []
+          Signature: []
+          Timestamp: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MerchantStatusRequest'
+      responses:
+        '200':
+          description: Merchant status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MerchantStatusResponse'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+components:
+  securitySchemes:
+    PublicKey:
+      type: apiKey
+      in: header
+      name: PublicKey
+    Signature:
+      type: apiKey
+      in: header
+      name: Signature
+    Timestamp:
+      type: apiKey
+      in: header
+      name: Timestamp
+  schemas:
+    CreateOrderRequest:
+      example:
+        {
+          "user_cid": "client-1",
+          "currency": "ARS",
+          "payment_type": "ACCOUNTARS",
+          "amount": 100.55,
+          "cid": "order-128",
+          "merchant_cid": "merchant-2",
+          "description": "Order description",
+          "fio": "Juan Perez",
+          "fingerprint": "customer-fingerprint",
+          "callback_url": "https://merchant.example/callbacks/orders",
+          "cuit": "20112223334",
+          "form_options": {
+            "redirect_url": "https://merchant.example/orders/order-128"
+          }
+        }
+      type: object
+      required:
+      - user_cid
+      - currency
+      - amount
+      - cid
+      - fingerprint
+      - cuit
+      properties:
+        user_cid:
+          type: string
+          minLength: 1
+        currency:
+          type: string
+          enum: [ARS]
+          example: ARS
+          description: Currency tag enabled for the merchant.
+        payment_type:
+          type: string
+          nullable: true
+          example: ACCOUNTARS
+          description: Exact payment method tag enabled for this merchant, currency and operation.
+            Availability is configured separately for orders and withdraws. The example tag is illustrative.
+        amount:
+          type: number
+          format: float
+          minimum: 0
+        cid:
+          type: string
+          description: Partner operation ID, unique for this merchant within orders or
+            withdraws respectively.
+          minLength: 1
+        merchant_cid:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        fio:
+          type: string
+          nullable: true
+          maxLength: 100
+        fingerprint:
+          type: string
+          minLength: 1
+        callback_url:
+          type: string
+          nullable: true
+          format: uri
+        enable_amount_increment_logic:
+          type: boolean
+          nullable: true
+        form_options:
+          "$ref": "#/components/schemas/FormOptions"
+        phone_number:
+          type: string
+          nullable: true
+        cuit:
+          type: string
+          description: Required at creation, including hosted-page requests. Send 11 digits without separators.
+    CreateOrderResponse:
+      example:
+        {
+          "status": "in_work",
+          "amount": 100.55,
+          "order_id": "430551eecdb8ecb842621cce",
+          "requisites": {
+            "account_number": "0000156009805252099382",
+            "bank": "BANK",
+            "fio": "Juan Perez"
+          },
+          "timer": 1788603300,
+          "form_uri": "https://uragan.cash/external/orders/430551eecdb8ecb842621cce",
+          "canceled_reason": ""
+        }
+      type: object
+      properties:
+        status:
+          type: string
+          example: in_work
+          enum:
+          - created
+          - active
+          - in_work
+          - closed
+          - canceled
+        amount:
+          type: number
+          format: float
+        order_id:
+          type: string
+        requisites:
+          "$ref": "#/components/schemas/OrderRequisites"
+        timer:
+          type: integer
+          nullable: true
+          description: Countdown deadline as a Unix timestamp in seconds, not a duration.
+            Zero when there is no countdown; null when there is no associated order.
+        form_uri:
+          type: string
+          format: uri
+        canceled_reason:
+          type: string
+          nullable: true
+      required:
+      - status
+      - amount
+      - order_id
+      - requisites
+      - timer
+      - form_uri
+      - canceled_reason
+    GetOrderRequest:
+      example:
+        {
+          "order_id": "430551eecdb8ecb842621cce"
+        }
+      type: object
+      properties:
+        order_id:
+          type: string
+          minLength: 1
+        cid:
+          type: string
+          minLength: 1
+      description: Send order_id or cid. If both are supplied, order_id takes precedence;
+        there is no fallback to cid. Lookup is scoped to the authenticated merchant. Missing
+        or unknown identifiers return 404.
+      anyOf:
+      - required:
+        - order_id
+      - required:
+        - cid
+    OrderFullData:
+      example:
+        {
+          "order_id": "430551eecdb8ecb842621cce",
+          "cid": "order-128",
+          "status": "in_work",
+          "canceled_reason": "",
+          "timer": 1788603300,
+          "currency": "ARS",
+          "payment_type": "ACCOUNTARS",
+          "amount_in_currency": 100.55,
+          "rate": 1,
+          "full_amount": 100.55,
+          "commission": 0,
+          "amount": 100.55,
+          "created_at": "2026-09-05T10:00:00.000Z",
+          "updated_at": "2026-09-05T10:05:00.000Z",
+          "description": "Order description",
+          "merchant_cid": "merchant-2",
+          "user_cid": "client-1",
+          "fio": "Juan Perez",
+          "dni": "11222333",
+          "fingerprint": "customer-fingerprint",
+          "callback_url": "https://merchant.example/callbacks/orders",
+          "form_options": {
+            "redirect_url": "https://merchant.example/orders/order-128"
+          }
+        }
+      type: object
+      properties:
+        order_id:
+          type: string
+        cid:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+          - created
+          - active
+          - in_work
+          - closed
+          - canceled
+        canceled_reason:
+          type: string
+          nullable: true
+        timer:
+          type: integer
+          nullable: true
+          description: Countdown deadline as a Unix timestamp in seconds, not a duration.
+            Zero when there is no countdown; null when there is no associated order.
+        currency:
+          type: string
+          enum: [ARS]
+        payment_type:
+          type: string
+          nullable: true
+        amount_in_currency:
+          type: number
+          format: float
+          nullable: true
+          description: Current order amount in request currency; may differ from the amount
+            originally requested. Null before an order exists.
+        rate:
+          type: number
+          format: float
+          nullable: true
+          description: Exchange rate of the associated operation. Null before the operation
+            exists.
+        full_amount:
+          type: number
+          format: float
+          nullable: true
+          description: Merchant amount after commission is deducted, in merchant balance
+            currency. Null before an order exists.
+        commission:
+          type: number
+          format: float
+          nullable: true
+          description: Merchant commission in merchant balance currency. Null before the
+            associated operation exists.
+        amount:
+          type: number
+          format: float
+          nullable: true
+          description: Operation amount excluding merchant commission, in merchant balance
+            currency. Null before the associated operation exists.
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        merchant_cid:
+          type: string
+          nullable: true
+        user_cid:
+          type: string
+        fio:
+          type: string
+          nullable: true
+        dni:
+          type: string
+          nullable: true
+        client_cvu:
+          type: string
+          nullable: true
+          description: Customer account number supplied by the payment provider when enabled for the merchant.
+            Omitted with client_cuit when neither value is available; null when only client_cuit is available.
+        client_cuit:
+          type: string
+          nullable: true
+          description: Customer tax ID supplied by the payment provider when enabled for the merchant.
+            Omitted with client_cvu when neither value is available; null when only client_cvu is available.
+        client_name:
+          type: string
+          nullable: true
+          description: Included when enabled for the merchant. Customer name obtained
+            from the payment notification.
+        fingerprint:
+          type: string
+          nullable: true
+        callback_url:
+          type: string
+          nullable: true
+          format: uri
+        form_options:
+          "$ref": "#/components/schemas/FormOptions"
+      required:
+      - order_id
+      - cid
+      - status
+      - canceled_reason
+      - timer
+      - currency
+      - payment_type
+      - amount_in_currency
+      - rate
+      - full_amount
+      - commission
+      - amount
+      - created_at
+      - updated_at
+      - description
+      - merchant_cid
+      - user_cid
+      - fio
+      - dni
+      - fingerprint
+      - callback_url
+      - form_options
+    CreateWithdrawRequest:
+      example:
+        {
+          "user_cid": "client-1",
+          "currency": "ARS",
+          "payment_type": "ACCOUNTARS",
+          "amount": 100.55,
+          "cid": "withdraw-128",
+          "merchant_cid": "merchant-2",
+          "description": "Withdraw description",
+          "fingerprint": "customer-fingerprint",
+          "requisite": {
+            "account_number": "1234567890123456789012",
+            "cuit": "20112223334"
+          },
+          "callback_url": "https://merchant.example/callbacks/withdraws",
+          "form_options": {
+            "redirect_url": "https://merchant.example/withdraws/withdraw-128"
+          }
+        }
+      type: object
+      required:
+      - user_cid
+      - currency
+      - amount
+      - cid
+      - fingerprint
+      - payment_type
+      - requisite
+      properties:
+        user_cid:
+          type: string
+          minLength: 1
+        currency:
+          type: string
+          enum: [ARS]
+          example: ARS
+          description: Currency tag enabled for the merchant.
+        payment_type:
+          type: string
+          example: ACCOUNTARS
+          description: Exact payment method tag enabled for this merchant, currency and operation.
+            Availability is configured separately for orders and withdraws. The example tag is illustrative.
+            Required when a non-empty withdraw requisite is supplied.
+        amount:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+          description: Amount in request currency. A non-empty withdraw requisite requires
+            an amount greater than zero.
+        cid:
+          type: string
+          description: Partner operation ID, unique for this merchant within orders or
+            withdraws respectively.
+          minLength: 1
+        merchant_cid:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        fingerprint:
+          type: string
+          minLength: 1
+        requisite:
+          "$ref": "#/components/schemas/WithdrawRequisite"
+        callback_url:
+          type: string
+          nullable: true
+          format: uri
+        form_options:
+          "$ref": "#/components/schemas/FormOptions"
+      description: A non-empty requisite requires payment_type and amount greater than
+        zero. Requisite validation depends on the payment method. For Argentina P2C, requisite.cuit
+        is required at creation, including hosted-page requests.
+    CreateWithdrawResponse:
+      example:
+        {
+          "status": "active",
+          "withdraw_id": "430551eecdb8ecb842621cce",
+          "requisite": {
+            "account_number": "1234567890123456789012",
+            "cuit": "20112223334"
+          },
+          "form_uri": "https://uragan.cash/external/withdraws/430551eecdb8ecb842621cce",
+          "canceled_reason": ""
+        }
+      type: object
+      properties:
+        status:
+          type: string
+          example: active
+          enum:
+          - created
+          - active
+          - in_work
+          - closed
+          - canceled
+        withdraw_id:
+          type: string
+        requisite:
+          "$ref": "#/components/schemas/WithdrawRequisite"
+        form_uri:
+          type: string
+          format: uri
+        canceled_reason:
+          type: string
+      required:
+      - status
+      - withdraw_id
+      - requisite
+      - form_uri
+      - canceled_reason
+    GetWithdrawRequest:
+      example:
+        {
+          "withdraw_id": "430551eecdb8ecb842621cce"
+        }
+      type: object
+      properties:
+        withdraw_id:
+          type: string
+          minLength: 1
+        cid:
+          type: string
+          minLength: 1
+      description: Send withdraw_id or cid. If both are supplied, withdraw_id takes precedence;
+        there is no fallback to cid. Lookup is scoped to the authenticated merchant. Missing
+        or unknown identifiers return 404.
+      anyOf:
+      - required:
+        - withdraw_id
+      - required:
+        - cid
+    WithdrawFullData:
+      example:
+        {
+          "withdraw_id": "430551eecdb8ecb842621cce",
+          "cid": "withdraw-128",
+          "status": "in_work",
+          "canceled_reason": "",
+          "currency": "ARS",
+          "payment_type": "ACCOUNTARS",
+          "requisite": {
+            "account_number": "1234567890123456789012",
+            "cuit": "20112223334"
+          },
+          "amount_in_currency": 100.55,
+          "rate": 1,
+          "full_amount": 100.55,
+          "commission": 0,
+          "amount": 100.55,
+          "created_at": "2026-09-05T10:00:00.000Z",
+          "updated_at": "2026-09-05T10:05:00.000Z",
+          "description": "Withdraw description",
+          "merchant_cid": "merchant-2",
+          "user_cid": "client-1",
+          "fingerprint": "customer-fingerprint",
+          "callback_url": "https://merchant.example/callbacks/withdraws",
+          "form_options": {
+            "redirect_url": "https://merchant.example/withdraws/withdraw-128"
+          }
+        }
+      type: object
+      properties:
+        withdraw_id:
+          type: string
+        cid:
+          type: string
+        status:
+          type: string
+          enum:
+          - created
+          - active
+          - in_work
+          - closed
+          - canceled
+        canceled_reason:
+          type: string
+        currency:
+          type: string
+          enum: [ARS]
+        payment_type:
+          type: string
+          nullable: true
+        requisite:
+          "$ref": "#/components/schemas/WithdrawRequisite"
+        amount_in_currency:
+          type: number
+          format: float
+          description: Withdraw request amount in request currency.
+        rate:
+          type: number
+          format: float
+          nullable: true
+          description: Exchange rate of the associated operation. Null before the operation
+            exists.
+        full_amount:
+          type: number
+          format: float
+          nullable: true
+          description: Merchant amount including commission, in merchant balance currency.
+            Null before a withdraw exists.
+        commission:
+          type: number
+          format: float
+          nullable: true
+          description: Merchant commission in merchant balance currency. Null before the
+            associated operation exists.
+        amount:
+          type: number
+          format: float
+          nullable: true
+          description: Operation amount excluding merchant commission, in merchant balance
+            currency. Null before the associated operation exists.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        description:
+          type: string
+          nullable: true
+        merchant_cid:
+          type: string
+          nullable: true
+        user_cid:
+          type: string
+        fingerprint:
+          type: string
+        callback_url:
+          type: string
+          nullable: true
+          format: uri
+        form_options:
+          "$ref": "#/components/schemas/FormOptions"
+      required:
+      - withdraw_id
+      - cid
+      - status
+      - canceled_reason
+      - currency
+      - payment_type
+      - requisite
+      - amount_in_currency
+      - rate
+      - full_amount
+      - commission
+      - amount
+      - created_at
+      - updated_at
+      - description
+      - merchant_cid
+      - user_cid
+      - fingerprint
+      - callback_url
+      - form_options
+    FormOptions:
+      type: object
+      nullable: true
+      properties:
+        redirect_url:
+          type: string
+          format: uri
+    OrderRequisites:
+      type: object
+      description: Requisite fields depend on the selected payment method.
+      additionalProperties: true
+      properties:
+        account_number:
+          type: string
+        bank:
+          type: string
+        fio:
+          type: string
+        qr:
+          type: string
+        qr_data:
+          nullable: true
+        number:
+          type: string
+      nullable: true
+    WithdrawRequisite:
+      type: object
+      required: [cuit]
+      additionalProperties: true
+      properties:
+        account_number:
+          type: string
+          pattern: '^[0-9]{22}$'
+          description: Required for bank transfers. Send 22 digits without separators. Account aliases are not supported.
+        cuit:
+          type: string
+          description: Required at creation for both H2H and Redirect. Send 11 digits without separators.
+        number:
+          type: string
+          description: Card or account number for other enabled payment methods.
+      description: Payout details for the selected ARS payment method. CUIT is required in every creation request.
+    MerchantStatusRequest:
+      example:
+        {}
+      type: object
+      additionalProperties: false
+    MerchantStatusResponse:
+      example:
+        {
+          "balance": 15.0441562156216,
+          "group_balance": 30.012345,
+          "total_active_withdraws_sum": 10000,
+          "group_total_active_withdraws_sum": 18654
+        }
+      type: object
+      required:
+      - balance
+      - group_balance
+      - total_active_withdraws_sum
+      - group_total_active_withdraws_sum
+      properties:
+        balance:
+          type: number
+        group_balance:
+          type: number
+          nullable: true
+        total_active_withdraws_sum:
+          type: number
+          description: Total amount of the current merchant's active and in-work withdraw requests.
+        group_total_active_withdraws_sum:
+          type: number
+          nullable: true
+          description: Total amount of active and in-work withdraw requests for the merchant group.
+    ErrorResponse:
+      type: object
+      properties:
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+      required:
+      - errors
+    AuthenticationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Bad credentials
+      required:
+      - message
+  responses:
+    ValidationError:
+      description: Validation or business error.
+      content:
+        application/json:
+          example: {"errors":{"payment_type":["is invalid"]}}
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    AuthenticationError:
+      description: Invalid public key, signature, or timestamp.
+      content:
+        application/json:
+          example: {"message":"Bad credentials"}
+          schema:
+            $ref: '#/components/schemas/AuthenticationError'
+    InternalError:
+      description: Unexpected processing error.
+      content:
+        application/json:
+          example: {"errors":{"base":["Internal error"]}}
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+security:
+  - PublicKey: []
+    Signature: []
+    Timestamp: []
